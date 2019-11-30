@@ -2,6 +2,7 @@
   "usingComponents": {
     "van-button": "/static/vant-weapp/dist/button/index",
     "van-icon": "/static/vant-weapp/dist/icon/index",
-    "van-action-sheet": "/static/vant-weapp/dist/action-sheet/index"
+    "van-action-sheet": "/static/vant-weapp/dist/action-sheet/index",
+    "van-field": "/static/vant-weapp/dist/field/index"
   }
 }

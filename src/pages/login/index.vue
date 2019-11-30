@@ -63,7 +63,9 @@ export default {
   methods: {
     login() {
       let _this = this
-      console.log(this.loginForm)
+      wx.showLoading({
+        title: '加载中'
+      })
       this.$http.post({
         url: 'login',
         data: {
@@ -74,6 +76,7 @@ export default {
           wx.setStorageSync('token', res)
           console.log(wx.getStorageSync('token'))
           wx.switchTab({ url: '/pages/index/main' })
+          wx.hideLoading()
           _this.$http.get({
             url: 'user/getLoginInfo'
           }).then(response => {
