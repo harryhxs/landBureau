@@ -1,14 +1,36 @@
-<!-- 登录页 -->
+<!-- 注册页 -->
 <template>
   <div class="login-container">
     <div class="login-box">
+      <div>
+        <img
+          class="mobile-icon"
+          src="/static/images/mobile.png"
+        >
+        <input
+          v-model.lazy="loginForm.adminMobile"
+          placeholder="请输入管理员手机号"
+          type="text"
+        >
+      </div>
       <div>
         <img
           class="user-icon"
           src="/static/images/user-icon.png"
         >
         <input
-          v-model.lazy="loginForm.username"
+          v-model.lazy="loginForm.realName"
+          placeholder="请输入真实姓名"
+          type="text"
+        >
+      </div>
+      <div>
+        <img
+          class="mobile-icon"
+          src="/static/images/mobile.png"
+        >
+        <input
+          v-model.lazy="loginForm.moblie"
           placeholder="请输入手机号"
           type="text"
         >
@@ -26,15 +48,15 @@
       </div>
       <div
         class="login-btn"
-        @click="login"
-      >
-        <span>登录</span>
-      </div>
-      <div
-        class="login-btn register"
         @click="register"
       >
         <span>注册</span>
+      </div>
+      <div
+        class="login-btn back"
+        @click="goBack"
+      >
+        <span>返回</span>
       </div>
     </div>
   </div>
@@ -52,8 +74,10 @@ export default {
   data() {
     return {
       loginForm: {
-        username: '17783136819',
-        password: '136819'
+        adminMobile: '',
+        realName: '',
+        moblie: '',
+        password: ''
       }
     }
   },
@@ -63,33 +87,34 @@ export default {
   watch: {
 
   },
-  created() {
-
+  onLoad() {
+    this.loginForm.adminMobile = ''
   },
   methods: {
-    register() {
-      this.$router.push('/pages/register/main')
+    goBack() {
+      this.$router.back()
     },
-    login() {
+    register() {
       let _this = this
       wx.showLoading({
         title: '加载中'
       })
       this.$http.post({
-        url: 'login',
+        url: 'user/register',
         data: {
           ..._this.loginForm
         }
       }).then(res => {
-        if (res) {
-          wx.setStorageSync('token', res)
-          console.log(wx.getStorageSync('token'))
-          wx.switchTab({ url: '/pages/index/main' })
+        if (res && res.data) {
           wx.hideLoading()
-          _this.$http.get({
-            url: 'user/getLoginInfo'
-          }).then(response => {
-            _this.$store.commit('set_userInfo', response)
+          wx.showModal({
+            title: '注册成功提示',
+            content: '您已注册成功，待管理员审核通过',
+            success(res) {
+              if (res.confirm) {
+                _this.goBack()
+              }
+            }
           })
         }
       })
@@ -138,13 +163,21 @@ export default {
       width: 100%;
       line-height: 80rpx;
       text-align: center;
-      background: #d81e06;
+      background: #1296db;
       color: white;
-      &.register {
-        background: #1296db;
+      &.back {
         margin-top: 30rpx;
+        background: #07c160;
       }
     }
+    .register-tips {
+      margin-top: 20rpx;
+      font-size: 8pt;
+      color: #d81e06;
+    }
+  }
+  .moblie-icon {
+    width: 30rpx;
   }
 }
 </style>

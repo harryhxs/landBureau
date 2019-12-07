@@ -86,6 +86,10 @@
             autosize
             @change="onChange($event, 'memo')"
           />
+          <van-uploader
+            :file-list="form.fileList"
+            @after-read="afterRead"
+          />
         </van-cell-group>
         <div
           class="btn-box"
@@ -98,6 +102,45 @@
         </div>
       </div>
     </van-action-sheet>
+    <!-- 巡查点详情 -->
+    <van-dialog
+      use-slot
+      async-close
+      :show="showPoint"
+      show-cancel-button
+      confirm-button-open-type="confirm"
+      @close="showPoint = false"
+      @confirm="showPoint = false"
+    >
+      <van-cell-group>
+        <van-field
+          :value="form.title"
+          title-width="50px"
+          required
+          label="名称"
+          placeholder="请输入记录名称"
+          @change="onChange($event, 'title')"
+        />
+        <van-field
+          :value="form.address"
+          title-width="50px"
+          required
+          label="地址"
+          placeholder="请输入地址"
+          @change="onChange($event, 'address')"
+        />
+        <van-field
+          v-model="form.memo"
+          title-width="50px"
+          required
+          label="描述"
+          placeholder="请输入描述"
+          type="textarea"
+          autosize
+          @change="onChange($event, 'memo')"
+        />
+      </van-cell-group>
+    </van-dialog>
   </div>
 </template>
 
@@ -126,9 +169,11 @@ export default {
         memo: '',
         address: '',
         longitude: '',
-        latitude: ''
+        latitude: '',
+        fileList: []
       },
-      title: ''
+      title: '',
+      showPoint: false
     }
   },
   computed: {
@@ -174,6 +219,7 @@ export default {
     onChange(event, type) {
       this.form[type] = event.mp.detail
     },
+    // 开始任务
     startTask(item) {
       this.currentTask = item
       this.getMarkers()
@@ -203,17 +249,66 @@ export default {
       }
       this.markers.push(startMarker)
       this.markers.push(endMarker)
+      let points = [
+        {
+          latitude: Number(startPoint[1] || 0),
+          longitude: Number(startPoint[0] || 0)
+        },
+        {
+          latitude: Number(endPoint[1] || 0),
+          longitude: Number(endPoint[0] || 0)
+        }
+      ]
+      this.polyLine.push({
+        points: points,
+        color: '#1296db',
+        width: 2
+      })
       this.currPosition.latitude = Number(startPoint[1] || 0)
       this.currPosition.longitude = Number(startPoint[0] || 0)
       this.show = false
     },
+    // 上传图片
+    afterRead(event) {
+      const { file } = event.mp.detail
+      wx.uploadFile({
+        url: '',
+        filePath: file.path,
+        name: file.name,
+        success(res) {
+
+        }
+      })
+    },
+    // 添加巡查记录
     addRecords() {
+      if (!this.currentTask.id) {
+        wx.showModal({
+          title: '提示',
+          content: '请先开始任务'
+        })
+        return
+      }
       this.show1 = true
     },
     callouttap(e) {
       console.log(e.mp.markerId)
       let marker = this.markers.find(val => val.id == e.mp.markerId)
-      console.log(marker)
+      let pointId = marker.id
+      this.getMarkerDetail(pointId)
+      this.showPoint = true
+    },
+    getMarkerDetail(pointId) {
+      this.$http.post({
+        url: 'landInspect/getPointDomainObjectDetailByPointId?pointId=' + pointId
+      }).then(res => {
+        if (res && res.data) {
+          this.form.title = res.data.landInspectPoint.title
+          this.form.address = res.data.landInspectPoint.address
+          this.form.memo = res.data.landInspectPoint.memo
+          this.form.fileList = res.data.attachList
+        }
+      })
     },
     getMarkers() {
       this.$http.post({
@@ -240,6 +335,7 @@ export default {
             }
             this.markers.push(marker)
           })
+          console.log(this.polyLine)
         }
       })
     },
@@ -321,7 +417,8 @@ export default {
     }
   }
   .new-task-form {
-    height: 50vh;
+    height: 80vh;
+    overflow-y: scroll;
     position: relative;
     .btn-box {
       position: absolute;

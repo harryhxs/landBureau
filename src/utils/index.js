@@ -17,8 +17,19 @@ export function formatTime(date) {
 
   return `${t1} ${t2}`
 }
+export function formatDate(time) {
+  const date = new Date(time)
+  const year = date.getFullYear()
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  const t1 = [year, month, day].map(formatNumber).join('-')
+  console.log('1111111')
+  console.log(t1)
+  return t1
+}
 
 export default {
   formatNumber,
-  formatTime
+  formatTime,
+  formatDate
 }

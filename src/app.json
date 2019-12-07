@@ -1,9 +1,12 @@
 {
   "pages": [
     "pages/index/main",
-    "pages/logs/main",
+    "pages/mine/main",
     "pages/counter/main",
-    "pages/login/main"
+    "pages/login/main",
+    "pages/case/main",
+    "pages/caseAdd/main",
+    "pages/register/main"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -30,8 +33,14 @@
         "selectedIconPath": "static/tabs/home-active.png"
       },
       {
+        "text": "案件",
+        "pagePath": "pages/case/main",
+        "iconPath": "static/tabs/case.png",
+        "selectedIconPath": "static/tabs/case_active.png"
+      },
+      {
         "text": "我的",
-        "pagePath": "pages/logs/main",
+        "pagePath": "pages/mine/main",
         "iconPath": "static/tabs/user.png",
         "selectedIconPath": "static/tabs/user-active.png"
       }
@@ -43,6 +52,12 @@
         "pagePath": "pages/index/main",
         "icon": "static/tabs/home.png",
         "activeIcon": "static/tabs/home-active.png"
+      },
+      {
+        "name": "案件",
+        "pagePath": "pages/case/main",
+        "icon": "static/tabs/case.png",
+        "activeIcon": "static/tabs/case_active.png"
       },
       {
         "name": "订单",
