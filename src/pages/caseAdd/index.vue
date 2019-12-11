@@ -16,6 +16,7 @@
           title-width="100px"
           required
           label="发现时间"
+          disabled
           :placeholder="'请输入发现时间'"
           @click="openDatePicker('discoveryTime')"
         />
@@ -24,6 +25,7 @@
           title-width="100px"
           required
           label="处罚时间"
+          disabled
           :placeholder="'请输入处罚时间'"
           @click="openDatePicker('punishTime')"
         />
@@ -31,6 +33,7 @@
           :value="transferTime"
           title-width="100px"
           required
+          disabled
           label="移送时间"
           :placeholder="'请输入移送时间'"
           @click="openDatePicker('transferTime')"

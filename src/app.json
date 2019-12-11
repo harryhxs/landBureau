@@ -6,7 +6,8 @@
     "pages/login/main",
     "pages/case/main",
     "pages/caseAdd/main",
-    "pages/register/main"
+    "pages/register/main",
+    "pages/setting/main"
   ],
   "window": {
     "backgroundTextStyle": "light",

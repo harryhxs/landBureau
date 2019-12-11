@@ -86,10 +86,16 @@
             autosize
             @change="onChange($event, 'memo')"
           />
-          <van-uploader
-            :file-list="form.fileList"
-            @after-read="afterRead"
-          />
+          <div class="uplad-container">
+            <upload
+              width="120rpx"
+              height="120rpx"
+              max="5"
+              :srcs="[]"
+              @choosed="choosed"
+              @delete="onDelete"
+            />
+          </div>
         </van-cell-group>
         <div
           class="btn-box"
@@ -145,8 +151,14 @@
 </template>
 
 <script>
+import Upload from '@/components/upload'
+import QQMapWX from '../../utils/qqmap-wx-jssdk.js'
+var qqmapsdk = new QQMapWX({
+  key: 'VZZBZ-PBJWW-SJSRV-RGWPM-UW6RO-IPBEY'
+})
 export default {
   components: {
+    Upload
   },
   props: {
 
@@ -249,28 +261,60 @@ export default {
       }
       this.markers.push(startMarker)
       this.markers.push(endMarker)
-      let points = [
-        {
-          latitude: Number(startPoint[1] || 0),
-          longitude: Number(startPoint[0] || 0)
-        },
-        {
-          latitude: Number(endPoint[1] || 0),
-          longitude: Number(endPoint[0] || 0)
-        }
-      ]
-      this.polyLine.push({
-        points: points,
-        color: '#1296db',
-        width: 2
-      })
+      let start = {
+        latitude: Number(startPoint[1] || 0),
+        longitude: Number(startPoint[0] || 0)
+      }
+      let end = {
+        latitude: Number(endPoint[1] || 0),
+        longitude: Number(endPoint[0] || 0)
+      }
+      this.planRoute(start, end)
       this.currPosition.latitude = Number(startPoint[1] || 0)
       this.currPosition.longitude = Number(startPoint[0] || 0)
       this.show = false
     },
+    // 规划路线
+    planRoute(start, end) {
+      let _this = this
+      qqmapsdk.direction({
+        mode: 'driving',
+        from: start,
+        to: end,
+        success(res) {
+          var coors = res.result.routes[0].polyline
+          var pl = []
+          var kr = 1000000
+          // 坐标解压（返回的点串坐标，通过前向差分进行压缩）
+          for (var i = 2; i < coors.length; i++) {
+            coors[i] = Number(coors[i - 2]) + Number(coors[i]) / kr
+          }
+          // 将解压后的坐标放入点串数组pl中
+          for (var j = 0; j < coors.length; j += 2) {
+            pl.push({ latitude: coors[j], longitude: coors[j + 1] })
+          }
+          console.log(pl)
+          // 设置polyline
+          _this.polyLine = [{
+            points: pl,
+            color: '#FF0000DD',
+            width: 4
+          }
+          ]
+        },
+        fail(error) {
+          console.log(error)
+        }
+      })
+    },
     // 上传图片
     afterRead(event) {
       const { file } = event.mp.detail
+      console.log('111111')
+      console.log(file)
+      // this.$http.post({
+      //   url: 'oss/getCaseSignUrl'
+      // })
       wx.uploadFile({
         url: '',
         filePath: file.path,
@@ -401,18 +445,27 @@ export default {
     height: 50vh;
     padding: 20rpx;
     .task-box-item {
+      font-size: 10pt;
+      padding: 20rpx;
       display: flex;
       justify-content: space-between;
+      border-bottom: 2rpx solid #eee;
       .btn {
         background: red;
         color: #fff;
-        padding: 0 60rpx;
-        height: 60rpx;
-        line-height: 60rpx;
+        height: 50rpx;
+        width: 80rpx;
+        line-height: 50rpx;
         border-radius: 10rpx;
+        text-align: center;
+        font-size: 8pt;
       }
       .name {
-        color: #aaa;
+        width: calc(100% - 100rpx);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 10pt;
       }
     }
   }
@@ -427,5 +480,9 @@ export default {
       width: 100%;
     }
   }
+}
+.uplad-container {
+  margin-top: 20rpx;
+  padding-left: 20rpx;
 }
 </style>

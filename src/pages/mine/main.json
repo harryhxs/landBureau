@@ -1,3 +1,14 @@
 {
-  "navigationBarTitleText": "查看启动日志"
+  "navigationBarTitleText": "我的信息",
+  "usingComponents": {
+    "van-button": "/static/vant-weapp/dist/button/index",
+    "van-icon": "/static/vant-weapp/dist/icon/index",
+    "van-action-sheet": "/static/vant-weapp/dist/action-sheet/index",
+    "van-field": "/static/vant-weapp/dist/field/index",
+    "van-dialog": "/static/vant-weapp/dist/dialog/index",
+    "van-datetime-picker": "/static/vant-weapp/dist/datetime-picker/index",
+    "van-radio": "/static/vant-weapp/dist/radio/index",
+    "van-radio-group": "/static/vant-weapp/dist/radio-group/index",
+    "van-cell": "/static/vant-weapp/dist/cell/index"
+  }
 }
