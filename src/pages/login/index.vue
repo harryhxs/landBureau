@@ -41,7 +41,6 @@
 </template>
 
 <script>
-// import API from '@/api/user'
 export default {
   components: {
 
@@ -89,7 +88,8 @@ export default {
           _this.$http.get({
             url: 'user/getLoginInfo'
           }).then(response => {
-            _this.$store.commit('set_userInfo', response)
+            wx.setStorageSync('userInfo', response)
+            _this.$store.commit('user/set_userInfo', response)
           })
         }
       })

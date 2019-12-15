@@ -1,37 +1,10 @@
-const state = {
-  error: false,
-  message: '',
-  usserInfo: ''
-}
+import Vue from 'vue'
+import Vuex from 'vuex'
 
-const getters = {}
+import modules from './modules'
+Vue.use(Vuex)
 
-const actions = {
-  errorshow({ commit }, data) {
-    commit('errorshow', data)
-    setTimeout(() => {
-      commit('errorhide')
-    }, 3000)
-  }
-}
-
-const mutations = {
-  errorshow(state, data) {
-    state.error = true
-    state.message = data
-  },
-  errorhide(state, data) {
-    state.error = false
-    state.message = ''
-  },
-  set_userInfo(state, data) {
-    state.usserInfo = data
-  }
-}
-
-export default {
-  state,
-  getters,
-  actions,
-  mutations
-}
+export default new Vuex.Store({
+  modules,
+  strict: process.env.NODE_ENV !== 'production'
+})

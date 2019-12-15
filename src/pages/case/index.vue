@@ -3,7 +3,6 @@
   <div class="case-list-container">
     <scroll-view
       class="index-page-scroll-view"
-      :style="{height: '100vh'}"
       :scroll-y="true"
       @scrolltolower="reachBottom"
       @scroll="scrollContainerFn"
@@ -145,6 +144,7 @@ export default {
     }
   }
   .index-page-scroll-view {
+    height: calc(100vh - 40rpx);
     .case-item {
       font-size: 10pt;
       padding: 20rpx;

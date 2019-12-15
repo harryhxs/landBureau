@@ -86,67 +86,41 @@
             autosize
             @change="onChange($event, 'memo')"
           />
-          <van-uploader
-            :file-list="form.fileList"
-            @after-read="afterRead"
-          />
+          <div class="uplad-container">
+            <upload
+              width="120rpx"
+              height="120rpx"
+              max="5"
+              :srcs="form.attachList"
+              @choosed="choosed"
+              @delete="onDelete"
+              @change="getAttacheListh"
+            />
+          </div>
         </van-cell-group>
         <div
           class="btn-box"
           @click="submitData"
         >
           <van-button
-            type="primary"
+            :type="isEdit? 'danger':'primary'"
             size="large"
-          >提交</van-button>
+          >{{ isEdit? '修改': '提交' }}</van-button>
         </div>
       </div>
     </van-action-sheet>
-    <!-- 巡查点详情 -->
-    <van-dialog
-      use-slot
-      async-close
-      :show="showPoint"
-      show-cancel-button
-      confirm-button-open-type="confirm"
-      @close="showPoint = false"
-      @confirm="showPoint = false"
-    >
-      <van-cell-group>
-        <van-field
-          :value="form.title"
-          title-width="50px"
-          required
-          label="名称"
-          placeholder="请输入记录名称"
-          @change="onChange($event, 'title')"
-        />
-        <van-field
-          :value="form.address"
-          title-width="50px"
-          required
-          label="地址"
-          placeholder="请输入地址"
-          @change="onChange($event, 'address')"
-        />
-        <van-field
-          v-model="form.memo"
-          title-width="50px"
-          required
-          label="描述"
-          placeholder="请输入描述"
-          type="textarea"
-          autosize
-          @change="onChange($event, 'memo')"
-        />
-      </van-cell-group>
-    </van-dialog>
   </div>
 </template>
 
 <script>
+import Upload from '@/components/upload'
+import QQMapWX from '../../utils/qqmap-wx-jssdk.js'
+var qqmapsdk = new QQMapWX({
+  key: 'VZZBZ-PBJWW-SJSRV-RGWPM-UW6RO-IPBEY'
+})
 export default {
   components: {
+    Upload
   },
   props: {
 
@@ -170,10 +144,10 @@ export default {
         address: '',
         longitude: '',
         latitude: '',
-        fileList: []
+        attachList: []
       },
       title: '',
-      showPoint: false
+      isEdit: false
     }
   },
   computed: {
@@ -182,7 +156,7 @@ export default {
   watch: {
 
   },
-  onLoad() {
+  onShow() {
     const _this = this
     wx.getLocation({
       type: 'gcj02',
@@ -191,20 +165,10 @@ export default {
         _this.currPosition.longitude = res.longitude
       }
     })
-    let params = {
-      pageSize: 10,
-      pageNum: 1
-    }
-    this.$http.post({
-      url: 'landInspect/fuzzyQueryLandInspectList',
-      data: {
-        ...params
-      }
-    }).then(res => {
-      if (res) {
-        this.taskList = res.data.list || []
-      }
-    })
+    this.getTaskList()
+    this.currentTask = {}
+    this.markers = []
+    this.polyLine = []
   },
   methods: {
     makertap() {
@@ -219,9 +183,27 @@ export default {
     onChange(event, type) {
       this.form[type] = event.mp.detail
     },
+    // 获取任务列表
+    getTaskList() {
+      let params = {
+        pageSize: 10,
+        pageNum: 1
+      }
+      this.$http.post({
+        url: 'landInspect/fuzzyQueryLandInspectList',
+        data: {
+          ...params
+        }
+      }).then(res => {
+        if (res) {
+          this.taskList = res.data.list || []
+        }
+      })
+    },
     // 开始任务
     startTask(item) {
       this.currentTask = item
+      this.markers = []
       this.getMarkers()
       let startPoint = item.startPoint ? item.startPoint.split(',') : []
       let endPoint = item.endPoint ? item.endPoint.split(',') : []
@@ -249,54 +231,96 @@ export default {
       }
       this.markers.push(startMarker)
       this.markers.push(endMarker)
-      let points = [
-        {
-          latitude: Number(startPoint[1] || 0),
-          longitude: Number(startPoint[0] || 0)
-        },
-        {
+      let start = {
+        latitude: Number(startPoint[1] || 0),
+        longitude: Number(startPoint[0] || 0)
+      }
+      // 如果没有终点就以当前位置为终点
+      let end = {}
+      if (endPoint.length == 0) {
+        end = {
+          latitude: this.currPosition.latitude,
+          longitude: this.currPosition.longitude
+        }
+      } else {
+        end = {
           latitude: Number(endPoint[1] || 0),
           longitude: Number(endPoint[0] || 0)
         }
-      ]
-      this.polyLine.push({
-        points: points,
-        color: '#1296db',
-        width: 2
-      })
+      }
+      this.planRoute(start, end)
       this.currPosition.latitude = Number(startPoint[1] || 0)
       this.currPosition.longitude = Number(startPoint[0] || 0)
       this.show = false
     },
-    // 上传图片
-    afterRead(event) {
-      const { file } = event.mp.detail
-      wx.uploadFile({
-        url: '',
-        filePath: file.path,
-        name: file.name,
+    // 规划路线
+    planRoute(start, end) {
+      let _this = this
+      qqmapsdk.direction({
+        mode: 'driving',
+        from: start,
+        to: end,
         success(res) {
-
+          var coors = res.result.routes[0].polyline
+          var pl = []
+          var kr = 1000000
+          // 坐标解压（返回的点串坐标，通过前向差分进行压缩）
+          for (var i = 2; i < coors.length; i++) {
+            coors[i] = Number(coors[i - 2]) + Number(coors[i]) / kr
+          }
+          // 将解压后的坐标放入点串数组pl中
+          for (var j = 0; j < coors.length; j += 2) {
+            pl.push({ latitude: coors[j], longitude: coors[j + 1] })
+          }
+          console.log(pl)
+          // 设置polyline
+          _this.polyLine = [{
+            points: pl,
+            color: '#FF0000DD',
+            width: 4
+          }
+          ]
+        },
+        fail(error) {
+          console.log(error)
         }
       })
     },
     // 添加巡查记录
     addRecords() {
+      this.form = {
+        id: '',
+        title: '',
+        memo: '',
+        address: '',
+        longitude: '',
+        latitude: '',
+        attachList: []
+      }
+      let _this = this
       if (!this.currentTask.id) {
         wx.showModal({
           title: '提示',
-          content: '请先开始任务'
+          content: '您没有开始任务，是否开始自由巡查？',
+          success: function(res) {
+            if (res.confirm) {
+              _this.show1 = true
+            }
+          }
         })
-        return
+      } else {
+        _this.show1 = true
       }
-      this.show1 = true
+    },
+    getAttacheListh(list) {
+      this.form.attachList = [...list]
     },
     callouttap(e) {
-      console.log(e.mp.markerId)
       let marker = this.markers.find(val => val.id == e.mp.markerId)
       let pointId = marker.id
       this.getMarkerDetail(pointId)
-      this.showPoint = true
+      this.isEdit = true
+      this.show1 = true
     },
     getMarkerDetail(pointId) {
       this.$http.post({
@@ -306,7 +330,7 @@ export default {
           this.form.title = res.data.landInspectPoint.title
           this.form.address = res.data.landInspectPoint.address
           this.form.memo = res.data.landInspectPoint.memo
-          this.form.fileList = res.data.attachList
+          this.form.attachList = res.data.attachList
         }
       })
     },
@@ -354,13 +378,28 @@ export default {
               longitude: res.longitude + '',
               latitude: res.latitude + ''
             },
-            attachList: [{ fileUrl: 'www.baidu.com' }]
+            attachList: _this.form.attachList
+          }
+          let url = ''
+          if (_this.isEdit) {
+            url = 'landInspect/updateLandInspectPointInfo'
+          } else {
+            if (_this.currentTask.id) {
+              url = 'landInspect/createLandInspectPoint'
+            } else {
+              url = 'landInspect/createLandInspectAndPoint'
+            }
           }
           _this.$http.post({
-            url: 'landInspect/createLandInspectPoint',
+            url: url,
             data: params
           }).then(res => {
             if (res) {
+              // 创建成功后，更新任务
+              _this.currentTask = res.data
+              _this.startTask(_this.currentTask)
+              // 保存成功吧编辑状态设为false
+              _this.isEdit = false
               _this.show1 = false
             }
           })
@@ -401,18 +440,27 @@ export default {
     height: 50vh;
     padding: 20rpx;
     .task-box-item {
+      font-size: 10pt;
+      padding: 20rpx;
       display: flex;
       justify-content: space-between;
+      border-bottom: 2rpx solid #eee;
       .btn {
         background: red;
         color: #fff;
-        padding: 0 60rpx;
-        height: 60rpx;
-        line-height: 60rpx;
+        height: 50rpx;
+        width: 80rpx;
+        line-height: 50rpx;
         border-radius: 10rpx;
+        text-align: center;
+        font-size: 8pt;
       }
       .name {
-        color: #aaa;
+        width: calc(100% - 100rpx);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 10pt;
       }
     }
   }
@@ -427,5 +475,9 @@ export default {
       width: 100%;
     }
   }
+}
+.uplad-container {
+  margin-top: 20rpx;
+  padding-left: 20rpx;
 }
 </style>
