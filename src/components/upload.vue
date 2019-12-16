@@ -9,8 +9,13 @@
     </div>
     <img
       v-for="(src,index) in urls"
+<<<<<<< HEAD
       :key="index"
       :src="src.fileUrl"
+=======
+      :key="src"
+      :src="src"
+>>>>>>> 9105aac25db9e658056b24c63fb18ad74a3624cb
       :style="{'width':width || '120rpx','height':height || '120rpx'}"
       class="img"
       @click="previewImg(index)"
@@ -18,7 +23,10 @@
   </div>
 </template>
 <script>
+<<<<<<< HEAD
 import uploadFile from '../utils/uploadFile'
+=======
+>>>>>>> 9105aac25db9e658056b24c63fb18ad74a3624cb
 export default {
   // eslint-disable-next-line vue/require-prop-types
   props: ['width', 'height', 'max', 'srcs'],
@@ -31,6 +39,7 @@ export default {
     this.urls = this.srcs || []
   },
   methods: {
+<<<<<<< HEAD
     // 获取签名
     getCaseUrl(filePath) {
       const aliyunFileKey = 'test.png'
@@ -46,6 +55,8 @@ export default {
         }
       })
     },
+=======
+>>>>>>> 9105aac25db9e658056b24c63fb18ad74a3624cb
     uploadImg() {
       let that = this
       wx.chooseImage({
@@ -53,6 +64,7 @@ export default {
         sizeType: ['original', 'compressed'],
         sourceType: ['album', 'camera'],
         success: function(res) {
+<<<<<<< HEAD
           if (res.tempFilePaths.length + that.urls.length > 5) {
             wx.showModal({
               title: '提示',
@@ -66,6 +78,10 @@ export default {
               mask: true
             })
             that.getCaseUrl(v)
+=======
+          res.tempFilePaths.forEach(v => {
+            that.urls.push(v)
+>>>>>>> 9105aac25db9e658056b24c63fb18ad74a3624cb
           })
           that.$emit('choosed', { all: that.urls, currentUpload: res.tempFilePaths })
         }
