@@ -29,7 +29,7 @@
     "js-base64": "^2.5.1",
     "mpvue": "^2.0.0",
     "mpvue-router-patch": "0.2.1",
-    "node-sass": "^4.13.0",
+    "node-sass": "^4.13.1",
     "vant-weapp": "^0.5.23",
     "vuex": "^3.0.1"
   },
